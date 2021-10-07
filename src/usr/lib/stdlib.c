@@ -8,8 +8,11 @@
 
 // heap memory parameter
 
+// Always allocated new memory new space linearly (no-space-optimization)
+// #define HEAP_MALLOC_BLOCK_ALWAYS_APPEND
+
 // Full search on heap allocated memory can be a bit slow.
-// #define HEAP_MALLOC_SEARCH_MOST_APPROPRIATE_BLOCK
+#define HEAP_MALLOC_SEARCH_MOST_APPROPRIATE_BLOCK
 
 // During reallocating a block should extra space be created
 // as a new heap block.
@@ -339,6 +342,7 @@ static inline union heap_entry *heap_get_free_block(size_t new_size) {
         if (block->content.state == HEAP_BLOCK_LAST) {
             break;
         }
+        #ifndef HEAP_MALLOC_BLOCK_ALWAYS_APPEND
         if (block->content.state == HEAP_BLOCK_FREE && block->content.size >= new_size) {
             // block is free and have sufficient memory in this block
             uint32_t my_value = (block->content.size - new_size);
@@ -350,6 +354,7 @@ static inline union heap_entry *heap_get_free_block(size_t new_size) {
                 #endif
             }
         }
+        #endif
         block = heap_next_block(block);
     }
     if (most_appropriate_block == NULL) {
@@ -374,6 +379,7 @@ void* malloc(size_t size) {
 
     benchmark_heap_inuse += size;
     header->content.state = HEAP_BLOCK_ALLOCATED;
+
     return (((void*)header)+HEAP_HEADER_SIZE);
 }
 
@@ -386,6 +392,8 @@ void free(void* ptr) {
     union heap_entry *header = ptr-HEAP_HEADER_SIZE;
     if (header->content.state != HEAP_BLOCK_ALLOCATED) {
         // trying to free unallocated memory
+        printf(header->content.state);
+        heap_panic(": free(void*) on non-allocated block\n");
         return;
     }
     header->content.state = HEAP_BLOCK_FREE;

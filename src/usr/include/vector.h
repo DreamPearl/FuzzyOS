@@ -25,10 +25,12 @@ public:
     const_iterator begin() const;
     const_iterator end() const;
 
+    void resize(std::size_t new_size, const T &_default);
+    void resize(std::size_t new_size);
     void clear();
     bool empty() const;
     std::size_t size() const;
-    void push_back(const T &val);
+    void push_back(const T& val);
     void pop_back();
 
     T& back();

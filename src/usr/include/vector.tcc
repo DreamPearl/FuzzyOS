@@ -6,6 +6,7 @@
 #include <new.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 namespace std {
 
@@ -29,7 +30,7 @@ vector<T>::vector(std::size_t size, const T &_default):
         _data(NULL),
         _capacity(0),
         _size(size) {
-    resize_capacity(size);
+    resize_capacity(next_power2(size));
     for(std::size_t i = 0; i < size; i++) {
         this->_data[i] = _default;
     }
@@ -41,14 +42,14 @@ vector<T>::vector(const vector<T> &o) :
         _capacity(0),
         _size(o._size) {
     resize_capacity(o._capacity);
-    std::memcpy(_data, o._data, _capacity*sizeof(T));
+    std::memcpy(_data, o._data, _size*sizeof(T));
 }
 
 template <typename T>
 vector<T>& vector<T>::operator=(const vector<T> &o) {
-    resize_capacity(o._capacity);
     _size = o._size;
-    std::memcpy(_data, o._data, _capacity*sizeof(T));
+    resize_capacity(o._capacity);
+    std::memcpy(_data, o._data, _size*sizeof(T));
     return *this;
 }
 
@@ -74,12 +75,12 @@ void vector<T>::resize_capacity(std::size_t capacity) {
     // internal; assumes capacity to be power of 2
     // and will also make a copy of array and move _data pointer.
     // assumes size<=current_capacity and size<=new_capacity
-    const std::size_t data_size = std::min(capacity, this->_capacity)*sizeof(T);
-    T *_new_data = new T[capacity];
+    const std::size_t data_size = (this->_size)*sizeof(T);
+    T *_new_data = (T*) std::malloc(sizeof(T)*capacity);
     if (!_new_data) return;  // malloc failed
     std::memcpy(_new_data, this->_data, data_size);
 
-    delete[] this->_data;  // should be no-op if _data == NULL
+    std::free(this->_data);  // should be no-op if _data == NULL
     this->_data = _new_data;
     this->_capacity = capacity;
 }
@@ -101,7 +102,27 @@ std::size_t vector<T>::size() const {
 }
 
 template <typename T>
-void vector<T>::push_back(const T &val) {
+void vector<T>::resize(const std::size_t new_size, const T &_default) {
+    const std::size_t old_size = _size;
+    if (_size < new_size) {
+        resize_capacity(next_power2(new_size));
+        for(std::size_t i = _size; i < new_size; i++) {
+            this->_data[i] = _default;
+        }
+        _size = new_size;
+    } else {
+        _size = new_size;
+        resize_capacity(next_power2(new_size));
+    }
+}
+
+template <typename T>
+void vector<T>::resize(const std::size_t new_size) {
+    resize(new_size, T());
+}
+
+template <typename T>
+void vector<T>::push_back(const T& val) {
     if(this->_size == this->_capacity) {
         resize_capacity(this->_capacity*2);
     }
@@ -110,9 +131,14 @@ void vector<T>::push_back(const T &val) {
 
 template <typename T>
 void vector<T>::pop_back() {
-    // not reducing the capacity for now
     if(this->_size > 0) {
         this->_size--;
+    }
+
+    // resize capacity if more than 8 elements by keep
+    // safe factor as 4.
+    if (this->size>8 && this->size*4 < this->_capacity) {
+        resize_capacity(max(this->_capacity/4);
     }
 }
 
