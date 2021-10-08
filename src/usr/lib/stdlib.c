@@ -12,7 +12,7 @@
 // #define HEAP_MALLOC_BLOCK_ALWAYS_APPEND
 
 // Full search on heap allocated memory can be a bit slow.
-#define HEAP_MALLOC_SEARCH_MOST_APPROPRIATE_BLOCK
+// #define HEAP_MALLOC_SEARCH_MOST_APPROPRIATE_BLOCK
 
 // During reallocating a block should extra space be created
 // as a new heap block.
@@ -393,6 +393,7 @@ void free(void* ptr) {
     if (header->content.state != HEAP_BLOCK_ALLOCATED) {
         // trying to free unallocated memory
         printf(header->content.state);
+        printf(", %d", ptr);
         heap_panic(": free(void*) on non-allocated block\n");
         return;
     }

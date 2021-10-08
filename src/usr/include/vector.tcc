@@ -55,7 +55,7 @@ vector<T>& vector<T>::operator=(const vector<T> &o) {
 
 template <typename T>
 vector<T>::~vector() {
-    delete[] _data;
+    std::free(_data);
 }
 
 template <typename T>
@@ -137,8 +137,8 @@ void vector<T>::pop_back() {
 
     // resize capacity if more than 8 elements by keep
     // safe factor as 4.
-    if (this->size>8 && this->size*4 < this->_capacity) {
-        resize_capacity(max(this->_capacity/4);
+    if (this->_size>8 && (this->_size)*4 < this->_capacity) {
+        resize_capacity(this->_capacity/4);
     }
 }
 
